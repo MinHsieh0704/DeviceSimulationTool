@@ -1,0 +1,38 @@
+﻿<UserControl x:Class="DeviceSimulationTool.Components.DeviceListBoxItem"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:DeviceSimulationTool.Components"
+             mc:Ignorable="d"
+             d:DesignHeight="450" 
+             d:DesignWidth="200">
+
+    <Grid Width="178">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="30"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="40"/>
+        </Grid.ColumnDefinitions>
+
+        <Label Grid.Column="0" 
+               Content="{Binding DeviceIndex, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:DeviceListBoxItem}}}"/>
+
+        <Label Grid.Column="1" 
+               Content="{Binding DeviceName, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:DeviceListBoxItem}}}"/>
+
+        <Image Grid.Column="2"
+               Width="20"
+               Height="20">
+            <Image.Style>
+                <Style TargetType="{x:Type Image}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding DeviceIsStart, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:DeviceListBoxItem}}}" Value="True">
+                            <Setter Property="Source" Value="../Resources/Images/check.png"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Image.Style>
+        </Image>
+    </Grid>
+</UserControl>

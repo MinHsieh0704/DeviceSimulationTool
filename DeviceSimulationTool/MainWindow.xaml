@@ -11,8 +11,9 @@
         Width="800"
         FontSize="14"
         ResizeMode="CanMinimize">
-    
+
     <TabControl>
+        <components:IoBoxTabItem/>
         <components:HttpCommandTabItem/>
     </TabControl>
 </Window>

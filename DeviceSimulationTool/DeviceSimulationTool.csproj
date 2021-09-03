@@ -72,6 +72,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Components\IoBoxTabItem.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Components\HttpCommandTabItem.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -94,6 +98,9 @@
     </Compile>
     <Compile Include="Components\DeviceListBoxItem.xaml.cs">
       <DependentUpon>DeviceListBoxItem.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Components\IoBoxTabItem.xaml.cs">
+      <DependentUpon>IoBoxTabItem.xaml</DependentUpon>
     </Compile>
     <Compile Include="Components\HttpCommandTabItem.xaml.cs">
       <DependentUpon>HttpCommandTabItem.xaml</DependentUpon>

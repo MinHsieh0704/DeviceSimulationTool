@@ -72,6 +72,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Components\WiegandTabItem.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Components\IoBoxTabItem.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -98,6 +102,9 @@
     </Compile>
     <Compile Include="Components\DeviceListBoxItem.xaml.cs">
       <DependentUpon>DeviceListBoxItem.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Components\WiegandTabItem.xaml.cs">
+      <DependentUpon>WiegandTabItem.xaml</DependentUpon>
     </Compile>
     <Compile Include="Components\IoBoxTabItem.xaml.cs">
       <DependentUpon>IoBoxTabItem.xaml</DependentUpon>

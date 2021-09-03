@@ -14,6 +14,7 @@
 
     <TabControl>
         <components:IoBoxTabItem/>
+        <components:WiegandTabItem/>
         <components:HttpCommandTabItem/>
     </TabControl>
 </Window>

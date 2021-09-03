@@ -97,6 +97,7 @@
     <Compile Include="Components\Loading.xaml.cs">
       <DependentUpon>Loading.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Converts\BooleanToVisibilityHiddenConverter.cs" />
     <Compile Include="Helpers\Community.cs" />
     <Compile Include="Helpers\RequiredIfAttribute.cs" />
     <Compile Include="MainWindow.xaml.cs">

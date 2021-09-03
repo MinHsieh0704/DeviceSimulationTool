@@ -72,6 +72,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Components\HttpCommandTabItem.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Components\CircleButton.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -90,6 +94,9 @@
     </Compile>
     <Compile Include="Components\DeviceListBoxItem.xaml.cs">
       <DependentUpon>DeviceListBoxItem.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Components\HttpCommandTabItem.xaml.cs">
+      <DependentUpon>HttpCommandTabItem.xaml</DependentUpon>
     </Compile>
     <Compile Include="Components\CircleButton.xaml.cs">
       <DependentUpon>CircleButton.xaml</DependentUpon>
@@ -142,6 +149,8 @@
     <Resource Include="logo.ico" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Resources\Images\minus-symbol.png" />
+    <Resource Include="Resources\Images\plus-black-symbol.png" />
     <Resource Include="Resources\Images\check.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

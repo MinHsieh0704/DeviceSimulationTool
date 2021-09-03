@@ -12,10 +12,21 @@
         FontSize="14"
         ResizeMode="CanMinimize">
 
-    <TabControl>
-        <components:IoBoxTabItem/>
-        <components:WiegandTabItem/>
-        <components:HttpCommandTabItem/>
-        <components:AO20WWGTabItem/>
-    </TabControl>
+    <Grid>
+        <UserControl Style="{StaticResource LoadingBox}"/>
+
+        <DockPanel>
+            <Label DockPanel.Dock="Bottom" 
+                   Content="{Binding AppVersion, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:MainWindow}}}" 
+                   Style="{StaticResource LabelVersion}"
+                   HorizontalAlignment="Right"/>
+            
+            <TabControl DockPanel.Dock="Top">
+                <components:IoBoxTabItem/>
+                <components:WiegandTabItem/>
+                <components:HttpCommandTabItem/>
+                <components:AO20WWGTabItem/>
+            </TabControl>
+        </DockPanel>
+    </Grid>
 </Window>

@@ -44,6 +44,14 @@ namespace DeviceSimulationTool.Components
         }
         public static readonly DependencyProperty DeviceIsStartProperty =
             DependencyProperty.Register("DeviceIsStart", typeof(bool), typeof(DeviceListBoxItem), new PropertyMetadata(false));
+
+        public int DeviceSerialNumber
+        {
+            get { return (int)GetValue(DeviceSerialNumberProperty); }
+            set { SetValue(DeviceSerialNumberProperty, value); }
+        }
+        public static readonly DependencyProperty DeviceSerialNumberProperty =
+            DependencyProperty.Register("DeviceSerialNumber", typeof(int), typeof(DeviceListBoxItem), new PropertyMetadata(0));
         #endregion
 
         public DeviceListBoxItem()

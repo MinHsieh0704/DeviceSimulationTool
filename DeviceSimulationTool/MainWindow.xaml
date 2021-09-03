@@ -16,5 +16,6 @@
         <components:IoBoxTabItem/>
         <components:WiegandTabItem/>
         <components:HttpCommandTabItem/>
+        <components:AO20WWGTabItem/>
     </TabControl>
 </Window>

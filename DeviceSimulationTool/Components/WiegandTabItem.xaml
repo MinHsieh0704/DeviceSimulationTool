@@ -82,6 +82,7 @@
                          HorizontalContentAlignment="Left"
                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         FontFamily="Consolas"
                          Text="{Binding Stdout, ElementName=tabItem}"/>
             </Grid>
         </DockPanel>

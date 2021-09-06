@@ -139,6 +139,7 @@
     <Compile Include="Converts\BooleanReverseConverter.cs" />
     <Compile Include="Converts\BooleanToVisibilityHiddenConverter.cs" />
     <Compile Include="Helpers\Community.cs" />
+    <Compile Include="Helpers\Wiegand.cs" />
     <Compile Include="Helpers\IoBox.cs" />
     <Compile Include="Helpers\RequiredIfAttribute.cs" />
     <Compile Include="MainWindow.xaml.cs">

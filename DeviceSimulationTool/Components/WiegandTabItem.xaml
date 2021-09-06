@@ -81,7 +81,8 @@
                          VerticalContentAlignment="Top"
                          HorizontalContentAlignment="Left"
                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                         ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         Text="{Binding Stdout, ElementName=tabItem}"/>
             </Grid>
         </DockPanel>
 

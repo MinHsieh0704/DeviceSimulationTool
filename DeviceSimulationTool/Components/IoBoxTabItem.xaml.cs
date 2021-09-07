@@ -199,10 +199,10 @@ namespace DeviceSimulationTool.Components
 
                 int index = this.DeviceList.SelectedIndex;
                 IDevice device = this.Devices[index];
-                this.StartServer(device);
-
                 device.config = data;
                 device.item.DeviceName = data.name;
+
+                this.StartServer(device);
             }
             catch (Exception ex)
             {
@@ -340,10 +340,11 @@ namespace DeviceSimulationTool.Components
 
                 server.onMessage.Subscribe((x) =>
                 {
-                    device.stdouts.Add($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")} ---> {x}");
-
                     this.Dispatcher.Invoke(new Action(() =>
                     {
+                        device.stdouts.Add($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")} ---> {x}");
+                        App.PrintService.Log($"{x}", Print.EMode.message, $"IoBox_{device.item.DeviceSerialNumber}");
+
                         if (this.SelectedDeviceSerialNumber == device.item.DeviceSerialNumber)
                         {
                             this.Stdout += $"\r\n{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")} ---> {x}";
@@ -354,6 +355,7 @@ namespace DeviceSimulationTool.Components
                 server.Connect();
 
                 device.stdouts.Add($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")} ---> {device.config.name} is Start");
+                App.PrintService.Log($"{device.config.name} is Start", Print.EMode.message, $"IoBox_{device.item.DeviceSerialNumber}");
                 if (this.SelectedDeviceSerialNumber == device.item.DeviceSerialNumber)
                 {
                     if (this.Stdout != "")
@@ -394,7 +396,9 @@ namespace DeviceSimulationTool.Components
                 device.server = null;
 
                 device.stdouts.Add($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")} ---> {device.config.name} was Stop");
+                App.PrintService.Log($"{device.config.name} was Stop", Print.EMode.message, $"IoBox_{device.item.DeviceSerialNumber}");
                 device.stdouts.Add($"");
+                App.LogService.Write($"", $"IoBox_{device.item.DeviceSerialNumber}");
                 if (this.SelectedDeviceSerialNumber == device.item.DeviceSerialNumber)
                 {
                     if (this.Stdout != "")

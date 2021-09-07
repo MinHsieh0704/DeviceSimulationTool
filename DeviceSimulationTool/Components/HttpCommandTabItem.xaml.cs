@@ -271,11 +271,10 @@ namespace DeviceSimulationTool.Components
 
                 int index = this.DeviceList.SelectedIndex;
                 IDevice device = this.Devices[index];
-                device.config = data;
-                device.item.DeviceName = data.name;
                 this.StartServer(device);
 
-                this.IsStart = true;
+                device.config = data;
+                device.item.DeviceName = data.name;
             }
             catch (Exception ex)
             {
@@ -295,8 +294,6 @@ namespace DeviceSimulationTool.Components
                 int index = this.DeviceList.SelectedIndex;
                 IDevice device = this.Devices[index];
                 this.StopServer(device);
-
-                this.IsStart = false;
             }
             catch (Exception ex)
             {
@@ -367,10 +364,7 @@ namespace DeviceSimulationTool.Components
             {
                 int index = this.DeviceList.SelectedIndex;
                 IDevice device = this.Devices[index];
-                if (device.item.DeviceIsStart)
-                {
-                    this.StopServer(device);
-                }
+                this.StopServer(device);
 
                 this.DeviceItems.RemoveAt(index);
                 this.Devices.RemoveAt(index);
@@ -466,6 +460,10 @@ namespace DeviceSimulationTool.Components
                 }
 
                 device.item.DeviceIsStart = true;
+                if (this.SelectedDeviceSerialNumber == device.item.DeviceSerialNumber)
+                {
+                    this.IsStart = true;
+                }
             }
             catch (Exception ex)
             {
@@ -483,6 +481,11 @@ namespace DeviceSimulationTool.Components
 
             try
             {
+                if (!device.item.DeviceIsStart)
+                {
+                    return;
+                }
+
                 device.server.Dispose();
                 device.server = null;
 
@@ -499,6 +502,10 @@ namespace DeviceSimulationTool.Components
                 }
 
                 device.item.DeviceIsStart = false;
+                if (this.SelectedDeviceSerialNumber == device.item.DeviceSerialNumber)
+                {
+                    this.IsStart = false;
+                }
             }
             catch (Exception ex)
             {

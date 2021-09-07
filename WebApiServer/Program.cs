@@ -1,6 +1,7 @@
 ﻿using Min_Helpers;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -33,14 +34,20 @@ namespace WebApiServer
                     throw new Exception("args can not null or empty");
                 }
 
-                int port = Convert.ToInt32(args[0]);
+                int parentProcessId = Convert.ToInt32(args[0]);
 
-                if (args.Length >= 3)
+                if (args.Length == 1)
+                {
+                    throw new Exception("port can not null or empty");
+                }
+                int port = Convert.ToInt32(args[1]);
+
+                if (args.Length >= 4)
                 {
                     basicAuth = new IAccount()
                     {
-                        account = args[1],
-                        password = args[2]
+                        account = args[2],
+                        password = args[3]
                     };
                 }
 
@@ -60,13 +67,22 @@ namespace WebApiServer
                 var appXmlType = config.Formatters.XmlFormatter.SupportedMediaTypes.FirstOrDefault(t => t.MediaType == "application/xml");
                 config.Formatters.XmlFormatter.SupportedMediaTypes.Remove(appXmlType);
 
-                using (HttpSelfHostServer httpServer = new HttpSelfHostServer(config))
+                using (Process parent = Process.GetProcessById(parentProcessId))
                 {
-                    httpServer.OpenAsync().Wait();
-
-                    while (true)
+                    using (HttpSelfHostServer httpServer = new HttpSelfHostServer(config))
                     {
-                        Thread.Sleep(1000);
+                        httpServer.OpenAsync().Wait();
+
+                        while (true)
+                        {
+                            if (parent.HasExited)
+                            {
+                                httpServer.CloseAsync().Wait();
+                                break;
+                            }
+
+                            Thread.Sleep(100);
+                        }
                     }
                 }
             }

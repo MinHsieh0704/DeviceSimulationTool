@@ -114,7 +114,6 @@
                   Margin="5">
                 <TextBox IsReadOnly="True" 
                          BorderThickness="0"
-                         Focusable="False"
                          IsTabStop="False"
                          VerticalContentAlignment="Top"
                          HorizontalContentAlignment="Left"

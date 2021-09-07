@@ -82,15 +82,15 @@ namespace WebApiServer.Controllers
                 }
 
                 string info = "";
-                info += $"\r\n    Method: {reqMethod.Method}";
-                info += $"\r\n    Path: {reqUri.LocalPath}";
-                info += $"\r\n    Headers:";
+                info += $"{{{{newline}}}}    Method: {reqMethod.Method}";
+                info += $"{{{{newline}}}}    Path: {reqUri.LocalPath}";
+                info += $"{{{{newline}}}}    Headers:";
                 foreach (var header in headers)
                 {
                     if (header.Value == null) continue;
-                    info += $"\r\n        - {header.Key}: {JsonConvert.SerializeObject(header.Value)}";
+                    info += $"{{{{newline}}}}        - {header.Key}: {JsonConvert.SerializeObject(header.Value)}";
                 }
-                info += $"\r\n    Content:";
+                info += $"{{{{newline}}}}    Content:";
                 info += IndexController.ContentInfo(content, 0);
 
                 Console.WriteLine($"{info}");
@@ -99,21 +99,14 @@ namespace WebApiServer.Controllers
             }
             catch (HttpResponseException ex)
             {
-                if (ex.Response.Headers.WwwAuthenticate.Count == 0)
-                {
-                    Console.WriteLine($"{ex.Response.StatusCode}, {await ex.Response.Content.ReadAsStringAsync()}");
-                }
-                else
-                {
-                    Console.WriteLine($"{ex.Response.StatusCode}, {await ex.Response.Content.ReadAsStringAsync()}");
-                }
+                Console.WriteLine($"{ex.Response.StatusCode}, {await ex.Response.Content.ReadAsStringAsync()}");
 
                 return ResponseMessage(ex.Response);
             }
             catch (Exception ex)
             {
                 ex = ExceptionHelper.GetReal(ex);
-                Console.WriteLine($"{ex.Message}");
+                Console.WriteLine($"500, {ex.Message}");
 
                 return Content(HttpStatusCode.InternalServerError, ex.Message);
             }
@@ -138,14 +131,14 @@ namespace WebApiServer.Controllers
                     switch (jToken.Type)
                     {
                         case JTokenType.Null:
-                            info += $"\r\n{"".PadLeft((deep + 2) * 4, ' ')}- {input.Name}: null";
+                            info += $"{{{{newline}}}}{"".PadLeft((deep + 2) * 4, ' ')}- {input.Name}: null";
                             break;
                         case JTokenType.Object:
-                            info += $"\r\n{"".PadLeft((deep + 2) * 4, ' ')}- {input.Name}:";
+                            info += $"{{{{newline}}}}{"".PadLeft((deep + 2) * 4, ' ')}- {input.Name}:";
                             info += IndexController.ContentInfo(jToken.ToObject<JObject>(), deep + 1);
                             break;
                         case JTokenType.Array:
-                            info += $"\r\n{"".PadLeft((deep + 2) * 4, ' ')}- {input.Name}:";
+                            info += $"{{{{newline}}}}{"".PadLeft((deep + 2) * 4, ' ')}- {input.Name}:";
                             for (int i = 0; i < jToken.Count(); i++)
                             {
                                 info += IndexController.ContentInfo(new JObject() { new JProperty(i.ToString(), jToken[i]) }, deep + 1);
@@ -154,10 +147,10 @@ namespace WebApiServer.Controllers
                         case JTokenType.Date:
                             DateTime dt = (DateTime)input.Value;
                             var a = TimeZoneInfo.ConvertTimeToUtc(dt);
-                            info += $"\r\n{"".PadLeft((deep + 2) * 4, ' ')}- {input.Name}: {a.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")}";
+                            info += $"{{{{newline}}}}{"".PadLeft((deep + 2) * 4, ' ')}- {input.Name}: {a.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")}";
                             break;
                         default:
-                            info += $"\r\n{"".PadLeft((deep + 2) * 4, ' ')}- {input.Name}: {input.Value}";
+                            info += $"{{{{newline}}}}{"".PadLeft((deep + 2) * 4, ' ')}- {input.Name}: {input.Value}";
                             break;
                     }
                 }

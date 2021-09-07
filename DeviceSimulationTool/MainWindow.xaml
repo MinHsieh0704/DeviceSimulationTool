@@ -3,14 +3,30 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:DeviceSimulationTool"
+        xmlns:local="clr-namespace:DeviceSimulationTool" 
+        xmlns:components="clr-namespace:DeviceSimulationTool.Components"
         mc:Ignorable="d"
         Title="Device Simulation Tool" 
-        Height="450" 
+        Height="800" 
         Width="800"
+        FontSize="14"
         ResizeMode="CanMinimize">
-    
+
     <Grid>
-        
+        <UserControl Style="{StaticResource LoadingBox}"/>
+
+        <DockPanel>
+            <Label DockPanel.Dock="Bottom" 
+                   Content="{Binding AppVersion, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:MainWindow}}}" 
+                   Style="{StaticResource LabelVersion}"
+                   HorizontalAlignment="Right"/>
+            
+            <TabControl DockPanel.Dock="Top">
+                <components:IoBoxTabItem/>
+                <components:WiegandTabItem/>
+                <components:HttpCommandTabItem/>
+                <components:AO20WWGTabItem/>
+            </TabControl>
+        </DockPanel>
     </Grid>
 </Window>

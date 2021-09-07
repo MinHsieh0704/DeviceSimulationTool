@@ -2,6 +2,7 @@
 using Min_Helpers.LogHelper;
 using Min_Helpers.PrintHelper;
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Threading;
@@ -22,6 +23,8 @@ namespace DeviceSimulationTool
         public static string CommonPath { get; } = AppDomain.CurrentDomain.BaseDirectory;
         public static string AppName { get; } = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
 
+        public static int AppProcessId { get; } = Process.GetCurrentProcess().Id;
+
         private static DirectoryInfo _logPath = new DirectoryInfo($"{App.CommonPath}\\logs");
         public static DirectoryInfo LogPath
         {
@@ -40,11 +43,11 @@ namespace DeviceSimulationTool
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("en");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("en");
+
             try
             {
-                Thread.CurrentThread.CurrentCulture = new CultureInfo("en");
-                Thread.CurrentThread.CurrentUICulture = new CultureInfo("en");
-
                 LogService = new Log();
                 LogService.LogPath = LogPath.FullName;
 

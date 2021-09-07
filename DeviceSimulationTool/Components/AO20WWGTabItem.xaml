@@ -1,0 +1,131 @@
+﻿<TabItem x:Name="tabItem"
+         x:Class="DeviceSimulationTool.Components.AO20WWGTabItem"
+         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+         xmlns:local="clr-namespace:DeviceSimulationTool.Components"
+         xmlns:convert="clr-namespace:DeviceSimulationTool.Converts"
+         Header="AO-20W WG"
+         mc:Ignorable="d" 
+         d:DesignHeight="450" 
+         d:DesignWidth="800">
+
+    <TabItem.Resources>
+        <convert:BooleanToVisibilityHiddenConverter x:Key="BooleanToVisibilityHidden"/>
+        <convert:BooleanReverseConverter x:Key="BooleanReverse"/>
+    </TabItem.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="1"/>
+            <ColumnDefinition Width="200"/>
+        </Grid.ColumnDefinitions>
+
+        <DockPanel Grid.Column="0">
+            <StackPanel DockPanel.Dock="Top">
+                <DockPanel Margin="5"
+                           LastChildFill="False"
+                           Visibility="{Binding IsSelectedDevice, ElementName=tabItem, Converter={StaticResource BooleanToVisibilityHidden}}">
+                    <StackPanel DockPanel.Dock="Left"
+                                IsEnabled="{Binding IsStart, ElementName=tabItem, Converter={StaticResource BooleanReverse}}">
+                        <StackPanel Orientation="Horizontal">
+                            <Label Width="100" 
+                                   Content="Name:"
+                                   HorizontalContentAlignment="Right"/>
+
+                            <TextBox x:Name="ConfigName" 
+                                     Width="150"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0 5 0 0"
+                                    Orientation="Horizontal">
+                            <Label Width="100" 
+                                   Content="Port:"
+                                   HorizontalContentAlignment="Right"/>
+
+                            <TextBox x:Name="ConfigPort" 
+                                     Width="150"
+                                     MaxLength="5"
+                                     PreviewTextInput="ConfigPort_PreviewTextInput"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel DockPanel.Dock="Right">
+                        <Button Width="80" 
+                                Content="Start"
+                                Click="StartService"
+                                IsEnabled="{Binding IsStart, ElementName=tabItem, Converter={StaticResource BooleanReverse}}"/>
+                        
+                        <Button Width="80" 
+                                Content="Stop"
+                                Margin="0 5 0 0"
+                                Click="StopService"
+                                IsEnabled="{Binding IsStart, ElementName=tabItem}"/>
+                    </StackPanel>
+                </DockPanel>
+
+                <Line X1="0"
+                      X2="{Binding ActualWidth, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type StackPanel}}}"
+                      Stroke="#ACACAC"
+                      StrokeThickness="1"/>
+            </StackPanel>
+
+            <Grid DockPanel.Dock="Bottom"
+                  Margin="5">
+                <TextBox IsReadOnly="True" 
+                         BorderThickness="0"
+                         IsTabStop="False"
+                         VerticalContentAlignment="Top"
+                         HorizontalContentAlignment="Left"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         FontFamily="Consolas"
+                         Text="{Binding Stdout, ElementName=tabItem}"/>
+            </Grid>
+        </DockPanel>
+
+        <Line Grid.Column="1"
+              Y1="0"
+              Y2="{Binding ActualHeight, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}"
+              Stroke="#ACACAC"
+              StrokeThickness="1"/>
+
+        <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <WrapPanel Grid.Row="0"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Center">
+                <local:CircleButton Width="25"
+                                    Height="25"
+                                    BorderThickness="0"
+                                    Margin="0 0 7 0"
+                                    IsEnabled="{Binding IsDeviceFull, ElementName=tabItem, Converter={StaticResource BooleanReverse}}"
+                                    Click="CreateDevice">
+                    <Image Source="../Resources/Images/plus-black-symbol.png"/>
+                </local:CircleButton>
+
+                <local:CircleButton Width="25"
+                                    Height="25"
+                                    BorderThickness="0"
+                                    Margin="0 0 7 0"
+                                    IsEnabled="{Binding IsSelectedDevice, ElementName=tabItem}"
+                                    Click="RemoveDevice">
+                    <Image Source="../Resources/Images/minus-symbol.png"/>
+                </local:CircleButton>
+            </WrapPanel>
+
+            <ListBox Grid.Row="1" 
+                     x:Name="DeviceList"
+                     Margin="5"
+                     BorderThickness="0"
+                     ItemsSource="{Binding DeviceItems, ElementName=tabItem}"
+                     SelectionChanged="DeviceList_SelectionChanged"/>
+        </Grid>
+    </Grid>
+</TabItem>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Min_Helpers;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -25,46 +26,54 @@ namespace WebApiServer
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en");
             Thread.CurrentThread.CurrentUICulture = new CultureInfo("en");
 
-            if (args == null || args.Length == 0)
+            try
             {
-                throw new Exception("args can not null or empty");
-            }
-
-            int port = Convert.ToInt32(args[0]);
-
-            if (args.Length >= 3)
-            {
-                basicAuth = new IAccount()
+                if (args == null || args.Length == 0)
                 {
-                    account = args[1],
-                    password = args[2]
-                };
-            }
-
-            HttpSelfHostConfiguration config = new HttpSelfHostConfiguration($"http://127.0.0.1:{port}");
-            //config.Routes.MapHttpRoute(
-            //    name: "Api",
-            //    routeTemplate: "{controller}/{action}/{id}",
-            //    defaults: new { id = RouteParameter.Optional }
-            //);
-
-            config.Routes.MapHttpRoute(
-                name: "Default",
-                routeTemplate: "{*url}",
-                defaults: new { controller = "Index", action = "Handle" }
-            );
-
-            var appXmlType = config.Formatters.XmlFormatter.SupportedMediaTypes.FirstOrDefault(t => t.MediaType == "application/xml");
-            config.Formatters.XmlFormatter.SupportedMediaTypes.Remove(appXmlType);
-
-            using (HttpSelfHostServer httpServer = new HttpSelfHostServer(config))
-            {
-                httpServer.OpenAsync().Wait();
-
-                while (true)
-                {
-                    Thread.Sleep(1000);
+                    throw new Exception("args can not null or empty");
                 }
+
+                int port = Convert.ToInt32(args[0]);
+
+                if (args.Length >= 3)
+                {
+                    basicAuth = new IAccount()
+                    {
+                        account = args[1],
+                        password = args[2]
+                    };
+                }
+
+                HttpSelfHostConfiguration config = new HttpSelfHostConfiguration($"http://127.0.0.1:{port}");
+                //config.Routes.MapHttpRoute(
+                //    name: "Api",
+                //    routeTemplate: "{controller}/{action}/{id}",
+                //    defaults: new { id = RouteParameter.Optional }
+                //);
+
+                config.Routes.MapHttpRoute(
+                    name: "Default",
+                    routeTemplate: "{*url}",
+                    defaults: new { controller = "Index", action = "Handle" }
+                );
+
+                var appXmlType = config.Formatters.XmlFormatter.SupportedMediaTypes.FirstOrDefault(t => t.MediaType == "application/xml");
+                config.Formatters.XmlFormatter.SupportedMediaTypes.Remove(appXmlType);
+
+                using (HttpSelfHostServer httpServer = new HttpSelfHostServer(config))
+                {
+                    httpServer.OpenAsync().Wait();
+
+                    while (true)
+                    {
+                        Thread.Sleep(1000);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ex = ExceptionHelper.GetReal(ex);
+                Console.Error.WriteLine($"{ex.Message}");
             }
         }
     }

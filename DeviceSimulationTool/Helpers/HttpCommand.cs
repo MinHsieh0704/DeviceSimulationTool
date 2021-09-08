@@ -78,7 +78,7 @@ namespace DeviceSimulationTool.Helpers
                 this.server.StartInfo.RedirectStandardOutput = true;
                 this.server.StartInfo.RedirectStandardError = true;
                 this.server.StartInfo.CreateNoWindow = true;
-                this.server.StartInfo.Arguments = $"{App.AppProcessId} {this.port}{(string.IsNullOrEmpty(this.account) || string.IsNullOrEmpty(this.password) ? "" : $"{this.account} {this.password}")}";
+                this.server.StartInfo.Arguments = $"{App.AppProcessId} {this.port}{(string.IsNullOrEmpty(this.account) || string.IsNullOrEmpty(this.password) ? "" : $" {this.account} {this.password}")}";
 
                 this.server.EnableRaisingEvents = true;
 

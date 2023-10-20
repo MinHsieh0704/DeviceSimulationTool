@@ -66,6 +66,7 @@ namespace WebApiServer
 
                 var appXmlType = config.Formatters.XmlFormatter.SupportedMediaTypes.FirstOrDefault(t => t.MediaType == "application/xml");
                 config.Formatters.XmlFormatter.SupportedMediaTypes.Remove(appXmlType);
+                config.MaxReceivedMessageSize = 1 * 1024 * 1024 * 1024;
 
                 using (Process parent = Process.GetProcessById(parentProcessId))
                 {

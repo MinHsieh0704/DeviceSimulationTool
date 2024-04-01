@@ -68,7 +68,28 @@ namespace WebApiServer
                 config.Formatters.XmlFormatter.SupportedMediaTypes.Remove(appXmlType);
                 config.MaxReceivedMessageSize = 1 * 1024 * 1024 * 1024;
 
-                using (Process parent = Process.GetProcessById(parentProcessId))
+                if (parentProcessId != -1)
+                {
+                    using (Process parent = Process.GetProcessById(parentProcessId))
+                    {
+                        using (HttpSelfHostServer httpServer = new HttpSelfHostServer(config))
+                        {
+                            httpServer.OpenAsync().Wait();
+
+                            while (true)
+                            {
+                                if (parent.HasExited)
+                                {
+                                    httpServer.CloseAsync().Wait();
+                                    break;
+                                }
+
+                                Thread.Sleep(100);
+                            }
+                        }
+                    }
+                }
+                else
                 {
                     using (HttpSelfHostServer httpServer = new HttpSelfHostServer(config))
                     {
@@ -76,12 +97,6 @@ namespace WebApiServer
 
                         while (true)
                         {
-                            if (parent.HasExited)
-                            {
-                                httpServer.CloseAsync().Wait();
-                                break;
-                            }
-
                             Thread.Sleep(100);
                         }
                     }

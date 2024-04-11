@@ -59,6 +59,7 @@ namespace WebApiServer.Controllers
                 List<KeyValuePair<string, IEnumerable<string>>> headers = reqHeaders.ToList().Concat(reqContent.Headers.ToList()).ToList();
 
                 string contentType = headers.Where((n) => n.Key.ToLower() == "content-type" || n.Key.ToLower() == "contenttype").Select((n) => n.Value.FirstOrDefault()).ToList().FirstOrDefault();
+                contentType = contentType != null && contentType.IndexOf("multipart/form-data") > -1 ? "multipart/form-data" : contentType;
                 contentType = reqMethod == HttpMethod.Get || reqMethod == HttpMethod.Delete ? null : contentType;
                 /// "application/json"
                 /// "text/plain"
@@ -69,12 +70,11 @@ namespace WebApiServer.Controllers
 
                 JObject content = new JObject();
 
-                NameValueCollection queryInput = null;
                 string bodyInput = null;
 
                 if (reqMethod == HttpMethod.Get || reqMethod == HttpMethod.Delete)
                 {
-                    queryInput = HttpUtility.ParseQueryString(reqUri.Query);
+                    NameValueCollection queryInput = HttpUtility.ParseQueryString(reqUri.Query);
 
                     foreach (var key in queryInput)
                     {
@@ -90,20 +90,25 @@ namespace WebApiServer.Controllers
                 }
                 else if (reqMethod == HttpMethod.Post || reqMethod == HttpMethod.Put)
                 {
-                    bodyInput = reqContent.ReadAsStringAsync().Result;
-                    if (!string.IsNullOrEmpty(bodyInput))
+                    switch (contentType)
                     {
-                        switch (contentType)
-                        {
-                            case "application/json":
+                        case "application/json":
+                            bodyInput = reqContent.ReadAsStringAsync().Result;
+                            if (!string.IsNullOrEmpty(bodyInput))
+                            {
                                 content = JsonConvert.DeserializeObject<JObject>(bodyInput);
-                                break;
-                            case "text/plain":
-                            case "application/xml":
-                            case "text/xml":
-                                break;
-                            case "application/x-www-form-urlencoded":
-                                queryInput = HttpUtility.ParseQueryString(bodyInput);
+                            }
+                            break;
+                        case "text/plain":
+                        case "application/xml":
+                        case "text/xml":
+                            bodyInput = reqContent.ReadAsStringAsync().Result;
+                            break;
+                        case "application/x-www-form-urlencoded":
+                            bodyInput = reqContent.ReadAsStringAsync().Result;
+                            if (!string.IsNullOrEmpty(bodyInput))
+                            {
+                                NameValueCollection queryInput = HttpUtility.ParseQueryString(bodyInput);
 
                                 foreach (var key in queryInput)
                                 {
@@ -116,10 +121,38 @@ namespace WebApiServer.Controllers
                                         _JToken = _JToken[keys[i]];
                                     }
                                 }
-                                break;
-                            default:
-                                return NotFound();
-                        }
+                            }
+                            break;
+                        case "multipart/form-data":
+                            MultipartMemoryStreamProvider formdataInput = reqContent.ReadAsMultipartAsync().Result;
+                            for (int i = 0; i < formdataInput.Contents.Count(); i++)
+                            {
+                                HttpContent data = formdataInput.Contents[i];
+
+                                ContentDispositionHeaderValue disposition = data.Headers.ContentDisposition;
+                                if (disposition.FileName == null)
+                                {
+                                    string key = disposition.Name.Replace("\"", "");
+                                    string value = data.ReadAsStringAsync().Result;
+
+                                    content.Add(new JProperty(key, value));
+                                }
+                                else
+                                {
+                                    string key = disposition.Name.Replace("\"", "");
+                                    string filename = disposition.FileName.Replace("\"", "");
+                                    string fileMediaType = data.Headers.ContentType.MediaType;
+
+                                    content.Add(new JProperty(key, new JObject()
+                                    {
+                                        new JProperty("filename", filename),
+                                        new JProperty("fileMediaType", fileMediaType),
+                                    }));
+                                }
+                            }
+                            break;
+                        default:
+                            return NotFound();
                     }
                 }
 
@@ -146,6 +179,9 @@ namespace WebApiServer.Controllers
                     case "application/x-www-form-urlencoded":
                         info += IndexController.ContentInfo(content, 0);
                         break;
+                    case "multipart/form-data":
+                        info += IndexController.ContentInfo(content, 0);
+                        break;
                     case null:
                         info += IndexController.ContentInfo(content, 0);
                         break;
@@ -162,6 +198,8 @@ namespace WebApiServer.Controllers
                     case "text/xml":
                         return Ok(string.IsNullOrEmpty(bodyInput) ? "" : bodyInput);
                     case "application/x-www-form-urlencoded":
+                        return Json(content);
+                    case "multipart/form-data":
                         return Json(content);
                     case null:
                         return Json(content);

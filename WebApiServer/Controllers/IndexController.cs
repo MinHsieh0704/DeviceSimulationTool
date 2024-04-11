@@ -59,6 +59,7 @@ namespace WebApiServer.Controllers
                 List<KeyValuePair<string, IEnumerable<string>>> headers = reqHeaders.ToList().Concat(reqContent.Headers.ToList()).ToList();
 
                 string contentType = headers.Where((n) => n.Key.ToLower() == "content-type" || n.Key.ToLower() == "contenttype").Select((n) => n.Value.FirstOrDefault()).ToList().FirstOrDefault();
+                contentType = reqMethod == HttpMethod.Get || reqMethod == HttpMethod.Delete ? null : contentType;
                 /// "application/json"
                 /// "text/plain"
                 /// "application/xml"
@@ -74,7 +75,6 @@ namespace WebApiServer.Controllers
                 if (reqMethod == HttpMethod.Get || reqMethod == HttpMethod.Delete)
                 {
                     queryInput = HttpUtility.ParseQueryString(reqUri.Query);
-                    contentType = "application/json";
 
                     foreach (var key in queryInput)
                     {
@@ -102,6 +102,21 @@ namespace WebApiServer.Controllers
                             case "application/xml":
                             case "text/xml":
                                 break;
+                            case "application/x-www-form-urlencoded":
+                                queryInput = HttpUtility.ParseQueryString(bodyInput);
+
+                                foreach (var key in queryInput)
+                                {
+                                    List<string> keys = Regex.Split(key.ToString(), @"\.").ToList();
+                                    JToken _JToken = content;
+                                    for (int i = 0; i < keys.Count(); i++)
+                                    {
+                                        if (i == keys.Count() - 1) _JToken[keys[i]] = queryInput[key.ToString()];
+                                        if (_JToken[keys[i]] == null) _JToken[keys[i]] = new JObject();
+                                        _JToken = _JToken[keys[i]];
+                                    }
+                                }
+                                break;
                             default:
                                 return NotFound();
                         }
@@ -128,6 +143,12 @@ namespace WebApiServer.Controllers
                     case "text/xml":
                         info += (string.IsNullOrEmpty(bodyInput) ? "" : $"{{{{newline}}}}{"".PadLeft(12, ' ')}{Regex.Replace(bodyInput, $"(\r)?\n", $"{{{{newline}}}}{"".PadLeft(12, ' ')}")}");
                         break;
+                    case "application/x-www-form-urlencoded":
+                        info += IndexController.ContentInfo(content, 0);
+                        break;
+                    case null:
+                        info += IndexController.ContentInfo(content, 0);
+                        break;
                 }
 
                 Console.WriteLine($"{info}");
@@ -140,6 +161,10 @@ namespace WebApiServer.Controllers
                     case "application/xml":
                     case "text/xml":
                         return Ok(string.IsNullOrEmpty(bodyInput) ? "" : bodyInput);
+                    case "application/x-www-form-urlencoded":
+                        return Json(content);
+                    case null:
+                        return Json(content);
                     default:
                         return ResponseMessage(new HttpResponseMessage() { StatusCode = HttpStatusCode.NoContent });
                 }

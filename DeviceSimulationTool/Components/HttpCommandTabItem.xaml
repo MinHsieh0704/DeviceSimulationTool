@@ -114,12 +114,13 @@
                   Margin="5">
                 <TextBox IsReadOnly="True" 
                          BorderThickness="0"
-                         Focusable="False"
                          IsTabStop="False"
                          VerticalContentAlignment="Top"
                          HorizontalContentAlignment="Left"
                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                         ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         FontFamily="Consolas"
+                         Text="{Binding Stdout, ElementName=tabItem}"/>
             </Grid>
         </DockPanel>
 

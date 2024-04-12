@@ -51,6 +51,8 @@ namespace DeviceSimulationTool.Components
             public DeviceListBoxItem item { get; set; }
 
             public List<string> stdouts { get; set; }
+
+            public HttpCommand server { get; set; }
         }
         #endregion
 
@@ -100,6 +102,8 @@ namespace DeviceSimulationTool.Components
         public static string MessageBoxTitle { get; } = $"{App.AppName}";
 
         private int DeviceLimit { get; } = 10;
+
+        private int SelectedDeviceSerialNumber = -1;
 
         public ObservableCollection<DeviceListBoxItem> DeviceItems { get; } = new ObservableCollection<DeviceListBoxItem>();
         public ObservableCollection<IDevice> Devices { get; } = new ObservableCollection<IDevice>();
@@ -201,10 +205,14 @@ namespace DeviceSimulationTool.Components
                 if (index == -1)
                 {
                     this.IsSelectedDevice = false;
+                    this.SelectedDeviceSerialNumber = -1;
+                    this.Stdout = "";
                 }
                 else
                 {
                     IDevice device = this.Devices[index];
+
+                    this.SelectedDeviceSerialNumber = device.item.DeviceSerialNumber;
 
                     this.ConfigName.Text = device.config.name;
                     this.ConfigPort.Text = device.config.port.ToString();
@@ -265,9 +273,8 @@ namespace DeviceSimulationTool.Components
                 IDevice device = this.Devices[index];
                 device.config = data;
                 device.item.DeviceName = data.name;
-                device.item.DeviceIsStart = true;
 
-                this.IsStart = true;
+                this.StartServer(device);
             }
             catch (Exception ex)
             {
@@ -286,9 +293,7 @@ namespace DeviceSimulationTool.Components
             {
                 int index = this.DeviceList.SelectedIndex;
                 IDevice device = this.Devices[index];
-                device.item.DeviceIsStart = false;
-
-                this.IsStart = false;
+                this.StopServer(device);
             }
             catch (Exception ex)
             {
@@ -358,15 +363,15 @@ namespace DeviceSimulationTool.Components
             try
             {
                 int index = this.DeviceList.SelectedIndex;
+                IDevice device = this.Devices[index];
+                this.StopServer(device);
+
                 this.DeviceItems.RemoveAt(index);
                 this.Devices.RemoveAt(index);
+
                 this.DeviceList.SelectedIndex = -1;
 
-                for (int i = 0; i < this.Devices.Count(); i++)
-                {
-                    IDevice device = this.Devices[i];
-                    device.item.DeviceIndex = i + 1;
-                }
+                this.ReflashDevices();
 
                 this.IsDeviceFull = false;
             }
@@ -378,6 +383,142 @@ namespace DeviceSimulationTool.Components
                 App.PrintService.Log($"{HttpCommandTabItem.PageName}, {message}", Print.EMode.error);
 
                 MessageBox.Show(message, HttpCommandTabItem.MessageBoxTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ReflashDevices()
+        {
+            try
+            {
+                for (int i = 0; i < this.Devices.Count(); i++)
+                {
+                    IDevice device = this.Devices[i];
+                    device.item.DeviceIndex = i + 1;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        private void StartServer(IDevice device)
+        {
+            MainWindow.LoadingPage.OnNext(true);
+
+            try
+            {
+                HttpCommand server = new HttpCommand();
+                server.port = device.config.port;
+                if (device.config.isEnableAuth)
+                {
+                    server.account = device.config.account;
+                    server.password = device.config.password;
+                }
+
+                device.server = server;
+
+                server.onMessage.Subscribe((x) =>
+                {
+                    this.Dispatcher.Invoke(new Action(() =>
+                    {
+                        device.stdouts.Add($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")} ---> {x}");
+                        App.PrintService.Log($"{x}", Print.EMode.message, $"HttpCommand_{device.item.DeviceSerialNumber}");
+
+                        if (this.SelectedDeviceSerialNumber == device.item.DeviceSerialNumber)
+                        {
+                            this.Stdout += $"\r\n{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")} ---> {x}";
+                        }
+                    }));
+                });
+                server.onError.Subscribe((x) =>
+                {
+                    this.Dispatcher.Invoke(new Action(() =>
+                    {
+                        x = ExceptionHelper.GetReal(x);
+
+                        device.stdouts.Add($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")} ---> {x}");
+                        App.PrintService.Log($"{x}", Print.EMode.message, $"HttpCommand_{device.item.DeviceSerialNumber}");
+
+                        if (this.SelectedDeviceSerialNumber == device.item.DeviceSerialNumber)
+                        {
+                            this.Stdout += $"\r\n{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")} ---> {x}";
+                        }
+
+                        this.StopServer(device);
+                    }));
+                });
+
+                server.Connect();
+
+                device.stdouts.Add($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")} ---> {device.config.name} is Start");
+                App.PrintService.Log($"{device.config.name} is Start", Print.EMode.message, $"HttpCommand_{device.item.DeviceSerialNumber}");
+                if (this.SelectedDeviceSerialNumber == device.item.DeviceSerialNumber)
+                {
+                    if (this.Stdout != "")
+                    {
+                        this.Stdout += $"\r\n";
+                    }
+                    this.Stdout += $"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")} ---> {device.config.name} is Start";
+                }
+
+                device.item.DeviceIsStart = true;
+                if (this.SelectedDeviceSerialNumber == device.item.DeviceSerialNumber)
+                {
+                    this.IsStart = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+            finally
+            {
+                MainWindow.LoadingPage.OnNext(false);
+            }
+        }
+
+        private void StopServer(IDevice device)
+        {
+            MainWindow.LoadingPage.OnNext(true);
+
+            try
+            {
+                if (!device.item.DeviceIsStart)
+                {
+                    return;
+                }
+
+                device.server.Dispose();
+                device.server = null;
+
+                device.stdouts.Add($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")} ---> {device.config.name} was Stop");
+                App.PrintService.Log($"{device.config.name} was Stop", Print.EMode.message, $"HttpCommand_{device.item.DeviceSerialNumber}");
+                device.stdouts.Add($"");
+                App.LogService.Write($"", $"HttpCommand_{device.item.DeviceSerialNumber}");
+                if (this.SelectedDeviceSerialNumber == device.item.DeviceSerialNumber)
+                {
+                    if (this.Stdout != "")
+                    {
+                        this.Stdout += $"\r\n";
+                    }
+                    this.Stdout += $"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")} ---> {device.config.name} was Stop";
+                    this.Stdout += $"\r\n";
+                }
+
+                device.item.DeviceIsStart = false;
+                if (this.SelectedDeviceSerialNumber == device.item.DeviceSerialNumber)
+                {
+                    this.IsStart = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+            finally
+            {
+                MainWindow.LoadingPage.OnNext(false);
             }
         }
     }

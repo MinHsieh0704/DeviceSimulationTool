@@ -37,7 +37,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Min_Helpers">
-      <HintPath>..\DeviceSimulationTool\libs\Min_Helpers\Min_Helpers.dll</HintPath>
+      <HintPath>..\DeviceSimulationTool\Lib\Min_Helpers\Min_Helpers.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

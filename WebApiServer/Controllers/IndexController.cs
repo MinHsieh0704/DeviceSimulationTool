@@ -58,18 +58,31 @@ namespace WebApiServer.Controllers
 
                 List<KeyValuePair<string, IEnumerable<string>>> headers = reqHeaders.ToList().Concat(reqContent.Headers.ToList()).ToList();
 
+                string contentType = headers.Where((n) => n.Key.ToLower() == "content-type" || n.Key.ToLower() == "contenttype").Select((n) => n.Value.FirstOrDefault()).ToList().FirstOrDefault();
+                contentType = contentType != null && contentType.IndexOf("multipart/form-data") > -1 ? "multipart/form-data" : contentType;
+                contentType = reqMethod == HttpMethod.Get || reqMethod == HttpMethod.Delete ? null : contentType;
+                /// "application/json"
+                /// "text/plain"
+                /// "application/xml"
+                /// "text/xml"
+                /// "application/x-www-form-urlencoded"
+                /// "multipart/form-data"
+
                 JObject content = new JObject();
+
+                string bodyInput = null;
+
                 if (reqMethod == HttpMethod.Get || reqMethod == HttpMethod.Delete)
                 {
-                    NameValueCollection input = HttpUtility.ParseQueryString(reqUri.Query);
+                    NameValueCollection queryInput = HttpUtility.ParseQueryString(reqUri.Query);
 
-                    foreach (var key in input)
+                    foreach (var key in queryInput)
                     {
                         List<string> keys = Regex.Split(key.ToString(), @"\.").ToList();
                         JToken _JToken = content;
                         for (int i = 0; i < keys.Count(); i++)
                         {
-                            if (i == keys.Count() - 1) _JToken[keys[i]] = input[key.ToString()];
+                            if (i == keys.Count() - 1) _JToken[keys[i]] = queryInput[key.ToString()];
                             if (_JToken[keys[i]] == null) _JToken[keys[i]] = new JObject();
                             _JToken = _JToken[keys[i]];
                         }
@@ -77,8 +90,70 @@ namespace WebApiServer.Controllers
                 }
                 else if (reqMethod == HttpMethod.Post || reqMethod == HttpMethod.Put)
                 {
-                    string input = reqContent.ReadAsStringAsync().Result;
-                    if (!string.IsNullOrEmpty(input)) content = JsonConvert.DeserializeObject<JObject>(input);
+                    switch (contentType)
+                    {
+                        case "application/json":
+                            bodyInput = reqContent.ReadAsStringAsync().Result;
+                            if (!string.IsNullOrEmpty(bodyInput))
+                            {
+                                content = JsonConvert.DeserializeObject<JObject>(bodyInput);
+                            }
+                            break;
+                        case "text/plain":
+                        case "application/xml":
+                        case "text/xml":
+                            bodyInput = reqContent.ReadAsStringAsync().Result;
+                            break;
+                        case "application/x-www-form-urlencoded":
+                            bodyInput = reqContent.ReadAsStringAsync().Result;
+                            if (!string.IsNullOrEmpty(bodyInput))
+                            {
+                                NameValueCollection queryInput = HttpUtility.ParseQueryString(bodyInput);
+
+                                foreach (var key in queryInput)
+                                {
+                                    List<string> keys = Regex.Split(key.ToString(), @"\.").ToList();
+                                    JToken _JToken = content;
+                                    for (int i = 0; i < keys.Count(); i++)
+                                    {
+                                        if (i == keys.Count() - 1) _JToken[keys[i]] = queryInput[key.ToString()];
+                                        if (_JToken[keys[i]] == null) _JToken[keys[i]] = new JObject();
+                                        _JToken = _JToken[keys[i]];
+                                    }
+                                }
+                            }
+                            break;
+                        case "multipart/form-data":
+                            MultipartMemoryStreamProvider formdataInput = reqContent.ReadAsMultipartAsync().Result;
+                            for (int i = 0; i < formdataInput.Contents.Count(); i++)
+                            {
+                                HttpContent data = formdataInput.Contents[i];
+
+                                ContentDispositionHeaderValue disposition = data.Headers.ContentDisposition;
+                                if (disposition.FileName == null)
+                                {
+                                    string key = disposition.Name.Replace("\"", "");
+                                    string value = data.ReadAsStringAsync().Result;
+
+                                    content.Add(new JProperty(key, value));
+                                }
+                                else
+                                {
+                                    string key = disposition.Name.Replace("\"", "");
+                                    string filename = disposition.FileName.Replace("\"", "");
+                                    string fileMediaType = data.Headers.ContentType.MediaType;
+
+                                    content.Add(new JProperty(key, new JObject()
+                                    {
+                                        new JProperty("filename", filename),
+                                        new JProperty("fileMediaType", fileMediaType),
+                                    }));
+                                }
+                            }
+                            break;
+                        default:
+                            return NotFound();
+                    }
                 }
 
                 string info = "";
@@ -91,11 +166,46 @@ namespace WebApiServer.Controllers
                     info += $"{{{{newline}}}}        - {header.Key}: {JsonConvert.SerializeObject(header.Value)}";
                 }
                 info += $"{{{{newline}}}}    Content:";
-                info += IndexController.ContentInfo(content, 0);
+                switch (contentType)
+                {
+                    case "application/json":
+                        info += IndexController.ContentInfo(content, 0);
+                        break;
+                    case "text/plain":
+                    case "application/xml":
+                    case "text/xml":
+                        info += (string.IsNullOrEmpty(bodyInput) ? "" : $"{{{{newline}}}}{"".PadLeft(12, ' ')}{Regex.Replace(bodyInput, $"(\r)?\n", $"{{{{newline}}}}{"".PadLeft(12, ' ')}")}");
+                        break;
+                    case "application/x-www-form-urlencoded":
+                        info += IndexController.ContentInfo(content, 0);
+                        break;
+                    case "multipart/form-data":
+                        info += IndexController.ContentInfo(content, 0);
+                        break;
+                    case null:
+                        info += IndexController.ContentInfo(content, 0);
+                        break;
+                }
 
                 Console.WriteLine($"{info}");
 
-                return Json(content);
+                switch (contentType)
+                {
+                    case "application/json":
+                        return Json(content);
+                    case "text/plain":
+                    case "application/xml":
+                    case "text/xml":
+                        return Ok(string.IsNullOrEmpty(bodyInput) ? "" : bodyInput);
+                    case "application/x-www-form-urlencoded":
+                        return Json(content);
+                    case "multipart/form-data":
+                        return Json(content);
+                    case null:
+                        return Json(content);
+                    default:
+                        return ResponseMessage(new HttpResponseMessage() { StatusCode = HttpStatusCode.NoContent });
+                }
             }
             catch (HttpResponseException ex)
             {

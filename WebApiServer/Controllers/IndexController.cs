@@ -68,12 +68,14 @@ namespace WebApiServer.Controllers
                 /// "application/x-www-form-urlencoded"
                 /// "multipart/form-data"
 
-                JObject content = new JObject();
+                JToken content = null;
 
                 string bodyInput = null;
 
                 if (reqMethod == HttpMethod.Get || reqMethod == HttpMethod.Delete)
                 {
+                    content = new JObject();
+
                     NameValueCollection queryInput = HttpUtility.ParseQueryString(reqUri.Query);
 
                     foreach (var key in queryInput)
@@ -96,7 +98,7 @@ namespace WebApiServer.Controllers
                             bodyInput = reqContent.ReadAsStringAsync().Result;
                             if (!string.IsNullOrEmpty(bodyInput))
                             {
-                                content = JsonConvert.DeserializeObject<JObject>(bodyInput);
+                                content = JToken.Parse(bodyInput);
                             }
                             break;
                         case "text/plain":
@@ -105,6 +107,8 @@ namespace WebApiServer.Controllers
                             bodyInput = reqContent.ReadAsStringAsync().Result;
                             break;
                         case "application/x-www-form-urlencoded":
+                            content = new JObject();
+
                             bodyInput = reqContent.ReadAsStringAsync().Result;
                             if (!string.IsNullOrEmpty(bodyInput))
                             {
@@ -124,6 +128,8 @@ namespace WebApiServer.Controllers
                             }
                             break;
                         case "multipart/form-data":
+                            content = new JObject();
+
                             MultipartMemoryStreamProvider formdataInput = reqContent.ReadAsMultipartAsync().Result;
                             for (int i = 0; i < formdataInput.Contents.Count(); i++)
                             {
@@ -135,19 +141,44 @@ namespace WebApiServer.Controllers
                                     string key = disposition.Name.Replace("\"", "");
                                     string value = data.ReadAsStringAsync().Result;
 
-                                    content.Add(new JProperty(key, value));
+                                    content[key] = value;
                                 }
                                 else
                                 {
                                     string key = disposition.Name.Replace("\"", "");
                                     string filename = disposition.FileName.Replace("\"", "");
-                                    string fileMediaType = data.Headers.ContentType.MediaType;
+                                    string fileMediaType = data.Headers.ContentType?.MediaType ?? "unknown";
 
-                                    content.Add(new JProperty(key, new JObject()
+                                    if (content[key] != null)
                                     {
-                                        new JProperty("filename", filename),
-                                        new JProperty("fileMediaType", fileMediaType),
-                                    }));
+                                        JArray _JArray = new JArray();
+                                        if (content[key].Type == JTokenType.Array)
+                                        {
+                                            foreach (var value in content[key])
+                                            {
+                                                _JArray.Add(value);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            _JArray.Add(content[key]);
+                                        }
+                                        _JArray.Add(new JObject()
+                                        {
+                                            new JProperty("filename", filename),
+                                            new JProperty("fileMediaType", fileMediaType),
+                                        });
+
+                                        content[key] = _JArray;
+                                    }
+                                    else
+                                    {
+                                        content[key] = new JObject()
+                                        {
+                                            new JProperty("filename", filename),
+                                            new JProperty("fileMediaType", fileMediaType),
+                                        };
+                                    }
                                 }
                             }
                             break;
@@ -228,16 +259,29 @@ namespace WebApiServer.Controllers
         /// <param name="content"></param>
         /// <param name="deep"></param>
         /// <returns></returns>
-        public static string ContentInfo(JObject content, int deep)
+        public static string ContentInfo(JToken content, int deep)
         {
             try
             {
-                content = content ?? new JObject();
+                JObject _content = new JObject();
+
+                if (content.Type == JTokenType.Array)
+                {
+                    for (int i = 0; i < content.Count(); i++)
+                    {
+                        _content.Add(new JProperty(i.ToString(), content[i]));
+                    }
+                }
+                else
+                {
+                    _content = JObject.FromObject(content);
+                }
 
                 string info = "";
-                foreach (var input in content.Properties())
+
+                foreach (var input in _content.Properties())
                 {
-                    JToken jToken = content[input.Name];
+                    JToken jToken = _content[input.Name];
                     switch (jToken.Type)
                     {
                         case JTokenType.Null:
@@ -245,7 +289,7 @@ namespace WebApiServer.Controllers
                             break;
                         case JTokenType.Object:
                             info += $"{{{{newline}}}}{"".PadLeft((deep + 2) * 4, ' ')}- {input.Name}:";
-                            info += IndexController.ContentInfo(jToken.ToObject<JObject>(), deep + 1);
+                            info += IndexController.ContentInfo(jToken, deep + 1);
                             break;
                         case JTokenType.Array:
                             info += $"{{{{newline}}}}{"".PadLeft((deep + 2) * 4, ' ')}- {input.Name}:";

@@ -147,13 +147,38 @@ namespace WebApiServer.Controllers
                                 {
                                     string key = disposition.Name.Replace("\"", "");
                                     string filename = disposition.FileName.Replace("\"", "");
-                                    string fileMediaType = data.Headers.ContentType.MediaType;
+                                    string fileMediaType = data.Headers.ContentType?.MediaType ?? "unknown";
 
-                                    content[key] = new JObject()
+                                    if (content[key] != null)
                                     {
-                                        new JProperty("filename", filename),
-                                        new JProperty("fileMediaType", fileMediaType),
-                                    };
+                                        JArray _JArray = new JArray();
+                                        if (content[key].Type == JTokenType.Array)
+                                        {
+                                            foreach (var value in content[key])
+                                            {
+                                                _JArray.Add(value);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            _JArray.Add(content[key]);
+                                        }
+                                        _JArray.Add(new JObject()
+                                        {
+                                            new JProperty("filename", filename),
+                                            new JProperty("fileMediaType", fileMediaType),
+                                        });
+
+                                        content[key] = _JArray;
+                                    }
+                                    else
+                                    {
+                                        content[key] = new JObject()
+                                        {
+                                            new JProperty("filename", filename),
+                                            new JProperty("fileMediaType", fileMediaType),
+                                        };
+                                    }
                                 }
                             }
                             break;

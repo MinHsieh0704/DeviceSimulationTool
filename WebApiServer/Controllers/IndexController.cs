@@ -80,14 +80,9 @@ namespace WebApiServer.Controllers
 
                     foreach (var key in queryInput)
                     {
-                        List<string> keys = Regex.Split(key.ToString(), @"\.").ToList();
                         JToken _JToken = content;
-                        for (int i = 0; i < keys.Count(); i++)
-                        {
-                            if (i == keys.Count() - 1) _JToken[keys[i]] = queryInput[key.ToString()];
-                            if (_JToken[keys[i]] == null) _JToken[keys[i]] = new JObject();
-                            _JToken = _JToken[keys[i]];
-                        }
+                        _JToken[key] = queryInput[key.ToString()];
+                        _JToken = _JToken[key];
                     }
                 }
                 else if (reqMethod == HttpMethod.Post || reqMethod == HttpMethod.Put)
